@@ -168,7 +168,7 @@ class YamlInterpreter(object):
         id = xml_id
         if '.' in xml_id:
             module, id = xml_id.split('.', 1)
-            assert '.' not in id, "The ID reference '%s' must contains maximum one dot.\n" \
+            assert '.' not in id, "The ID reference '%s' must contain at most one dot.\n" \
                                   "It is used to refer to other modules ID, in the form: module.record_id" \
                                   % (xml_id,)
             if module != self.module:
