@@ -12,7 +12,7 @@
     'installable': True,
     'auto_install': False,
     'test': [
-        'tests/test_import.yml',
+        'tests/test_import_reference.yml',
     ]
 }
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
