@@ -642,7 +642,6 @@ class account_account(osv.osv):
             done_list = []
         account = self.browse(cr, uid, id, context=context)
         new_child_ids = []
-        default.update(code=_("%s (copy)") % (account['code'] or ''))
         if not local:
             done_list = []
         if account.id in done_list:
@@ -656,6 +655,7 @@ class account_account(osv.osv):
             default['child_parent_ids'] = [(6, 0, new_child_ids)]
         else:
             default['child_parent_ids'] = False
+        default.setdefault('code', _("%s (copy)") % (account['code'] or ''))
         return super(account_account, self).copy(cr, uid, id, default, context=context)
 
     def _check_moves(self, cr, uid, ids, method, context=None):
@@ -2598,7 +2598,7 @@ class account_account_template(osv.osv):
         children_acc_criteria = [('chart_template_id','=', chart_template_id)]
         if template.account_root_id.id:
             children_acc_criteria = ['|'] + children_acc_criteria + ['&',('parent_id','child_of', [template.account_root_id.id]),('chart_template_id','=', False)]
-        children_acc_template = self.search(cr, uid, [('nocreate','!=',True)] + children_acc_criteria, order='id')
+        children_acc_template = self.search(cr, uid, [('nocreate','!=',True)] + children_acc_criteria, order='id', context=context)
         for account_template in self.browse(cr, uid, children_acc_template, context=context):
             # skip the root of COA if it's not the main one
             if (template.account_root_id.id == account_template.id) and template.parent_id:
