@@ -146,7 +146,7 @@ class PurchaseOrder(models.Model):
     picking_ids = fields.Many2many('stock.picking', compute='_compute_picking', string='Receptions', copy=False)
 
     # There is no inverse function on purpose since the date may be different on each line
-    date_planned = fields.Datetime(string='Scheduled Date', compute='_compute_date_planned', store=True, index=True, oldname='minimum_planned_date')
+    date_planned = fields.Datetime(string='Scheduled Date', compute='_compute_date_planned', store=True, index=True)
 
     amount_untaxed = fields.Monetary(string='Untaxed Amount', store=True, readonly=True, compute='_amount_all', track_visibility='always')
     amount_tax = fields.Monetary(string='Taxes', store=True, readonly=True, compute='_amount_all')
@@ -509,6 +509,7 @@ class PurchaseOrder(models.Model):
 class PurchaseOrderLine(models.Model):
     _name = 'purchase.order.line'
     _description = 'Purchase Order Line'
+    _order = 'sequence, id'
 
     @api.depends('product_qty', 'price_unit', 'taxes_id')
     def _compute_amount(self):
@@ -580,6 +581,11 @@ class PurchaseOrderLine(models.Model):
                         msg += _("Billed Quantity") + ": %s <br/></li>" % (line.qty_invoiced,)
                     msg += "</ul>"
                     order.message_post(body=msg)
+        # Update expectged date of corresponding moves
+        if 'date_planned' in values:
+            self.env['stock.move'].search([
+                ('purchase_line_id', 'in', self.ids), ('state', '!=', 'done')
+            ]).write({'date_expected': values['date_planned']})
         result = super(PurchaseOrderLine, self).write(values)
         if orders:
             orders._create_picking()
@@ -976,30 +982,41 @@ class ProcurementOrder(models.Model):
             'group_id': group
         }
 
+    def _make_po_select_supplier(self, suppliers):
+        """ Method intended to be overridden by customized modules to implement any logic in the
+            selection of supplier.
+        """
+        return suppliers[0]
+
+    def _make_po_get_domain(self, partner):
+        gpo = self.rule_id.group_propagation_option
+        group = (gpo == 'fixed' and self.rule_id.group_id) or \
+                (gpo == 'propagate' and self.group_id) or False
+
+        domain = (
+            ('partner_id', '=', partner.id),
+            ('state', '=', 'draft'),
+            ('picking_type_id', '=', self.rule_id.picking_type_id.id),
+            ('company_id', '=', self.company_id.id),
+            ('dest_address_id', '=', self.partner_dest_id.id))
+        if group:
+            domain += (('group_id', '=', group.id),)
+        return domain
+
     @api.multi
     def make_po(self):
         cache = {}
         res = []
         for procurement in self:
-            suppliers = procurement.product_id.seller_ids.filtered(lambda r: not r.product_id or r.product_id == procurement.product_id)
+            suppliers = procurement.product_id.seller_ids\
+                .filtered(lambda r: (not r.company_id or r.company_id == procurement.company_id) and (not r.product_id or r.product_id == procurement.product_id))
             if not suppliers:
                 procurement.message_post(body=_('No vendor associated to product %s. Please set one to fix this procurement.') % (procurement.product_id.name))
                 continue
-            supplier = suppliers[0]
+            supplier = procurement._make_po_select_supplier(suppliers)
             partner = supplier.name
 
-            gpo = procurement.rule_id.group_propagation_option
-            group = (gpo == 'fixed' and procurement.rule_id.group_id) or \
-                    (gpo == 'propagate' and procurement.group_id) or False
-
-            domain = (
-                ('partner_id', '=', partner.id),
-                ('state', '=', 'draft'),
-                ('picking_type_id', '=', procurement.rule_id.picking_type_id.id),
-                ('company_id', '=', procurement.company_id.id),
-                ('dest_address_id', '=', procurement.partner_dest_id.id))
-            if group:
-                domain += (('group_id', '=', group.id),)
+            domain = procurement._make_po_get_domain(partner)
 
             if domain in cache:
                 po = cache[domain]

@@ -7228,8 +7228,8 @@ msgstr "構成を複製することはできません！"
 #. module: base
 #: code:addons/base/ir/ir_model.py:549
 #, python-format
-msgid "Cannot rename field to %s, because that field already exists!"
-msgstr "%s と、フィールドの名前を変更することはできません。すでにそのフィールドは存在します。"
+msgid "Cannot rename/delete fields that are still present in views:"
+msgstr ""
 
 #. module: base
 #: code:addons/base/res/res_lang.py:219
@@ -7561,7 +7561,7 @@ msgstr "クライアントアクションタグ"
 #: model:ir.ui.view,arch_db:base.view_base_module_update
 #: model:ir.ui.view,arch_db:base.wizard_lang_export
 msgid "Close"
-msgstr "処理済"
+msgstr "閉じる"
 
 #. module: base
 #: model:res.country,name:base.cc
@@ -9727,6 +9727,19 @@ msgstr "項目タイプ"
 #, python-format
 msgid "Field `%(field_name)s` does not exist"
 msgstr "フィールド `%(field_name)s` がありません。"
+
+#. module: base
+#: code:addons/base/ir/ir_model.py:298
+#, python-format
+msgid ""
+"Field names can only contain characters, digits and underscores (up to 63)."
+msgstr ""
+
+#. module: base
+#: code:addons/base/ir/ir_model.py:307
+#, python-format
+msgid "Field names must be unique per model."
+msgstr ""
 
 #. module: base
 #: model:ir.actions.act_window,name:base.action_model_fields
@@ -13679,7 +13692,7 @@ msgstr "取引先ジオロケーション"
 #: code:addons/base/res/res_partner.py:742
 #, python-format
 msgid "Partners: "
-msgstr "取引先： "
+msgstr "取引先:"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_mail_server_smtp_pass
@@ -16908,7 +16921,7 @@ msgstr "制約のタイプ：`f`は外部キー、`u`は他の制約"
 #. module: base
 #: model:ir.ui.view,arch_db:base.report_irmodeloverview
 msgid "Type:"
-msgstr "タイプ："
+msgstr "タイプ:"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_l10n_ae

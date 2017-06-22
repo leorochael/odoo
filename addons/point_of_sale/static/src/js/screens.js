@@ -1355,6 +1355,16 @@ var ClientListScreenWidget = ScreenWidget.extend({
             contents.append($(QWeb.render('ClientDetailsEdit',{widget:this,partner:partner})));
             this.toggle_save_button();
 
+            // Browsers attempt to scroll invisible input elements
+            // into view (eg. when hidden behind keyboard). They don't
+            // seem to take into account that some elements are not
+            // scrollable.
+            contents.find('input').blur(function() {
+                setTimeout(function() {
+                    self.$('.window').scrollTop(0);
+                }, 0);
+            });
+
             contents.find('.image-uploader').on('change',function(event){
                 self.load_image_file(event.target.files[0],function(res){
                     if (res) {
@@ -1437,6 +1447,7 @@ var ReceiptScreenWidget = ScreenWidget.extend({
     print_xml: function() {
         var env = {
             widget:  this,
+            pos: this.pos,
             order: this.pos.get_order(),
             receipt: this.pos.get_order().export_for_printing(),
             paymentlines: this.pos.get_order().get_paymentlines()
